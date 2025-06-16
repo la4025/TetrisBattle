@@ -1,0 +1,25 @@
+# .gitignore (루트에 위치)
+*.user
+*.suo
+*.sdf
+*.VC.db
+*.log
+*.obj
+*.exe
+*.dll
+*.pdb
+*.ipch
+*.aps
+*.ncb
+*.opensdf
+*.VC.opendb
+*.cache
+*.vs/
+*.vscode/
+bin/
+obj/
+*.DS_Store
+.vscode/
+.idea/
+docker/data/
+docker/logs/
