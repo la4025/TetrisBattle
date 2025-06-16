@@ -5,6 +5,10 @@ VisualStudioVersion = 17.13.35931.197 d17.13
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "TetrisClient", "TetrisClient\TetrisClient.vcxproj", "{413118E7-FFAC-42B3-A022-D23641BFE051}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "TetrisServer", "TetrisServer\TetrisServer.vcxproj", "{4497E350-2444-41A6-83EE-79A9AFABD0A3}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Shared", "Shared\Shared.vcxproj", "{665E788D-08D3-43E3-A448-2F44BBA4752C}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x64 = Debug|x64
@@ -21,6 +25,22 @@ Global
 		{413118E7-FFAC-42B3-A022-D23641BFE051}.Release|x64.Build.0 = Release|x64
 		{413118E7-FFAC-42B3-A022-D23641BFE051}.Release|x86.ActiveCfg = Release|Win32
 		{413118E7-FFAC-42B3-A022-D23641BFE051}.Release|x86.Build.0 = Release|Win32
+		{4497E350-2444-41A6-83EE-79A9AFABD0A3}.Debug|x64.ActiveCfg = Debug|x64
+		{4497E350-2444-41A6-83EE-79A9AFABD0A3}.Debug|x64.Build.0 = Debug|x64
+		{4497E350-2444-41A6-83EE-79A9AFABD0A3}.Debug|x86.ActiveCfg = Debug|Win32
+		{4497E350-2444-41A6-83EE-79A9AFABD0A3}.Debug|x86.Build.0 = Debug|Win32
+		{4497E350-2444-41A6-83EE-79A9AFABD0A3}.Release|x64.ActiveCfg = Release|x64
+		{4497E350-2444-41A6-83EE-79A9AFABD0A3}.Release|x64.Build.0 = Release|x64
+		{4497E350-2444-41A6-83EE-79A9AFABD0A3}.Release|x86.ActiveCfg = Release|Win32
+		{4497E350-2444-41A6-83EE-79A9AFABD0A3}.Release|x86.Build.0 = Release|Win32
+		{665E788D-08D3-43E3-A448-2F44BBA4752C}.Debug|x64.ActiveCfg = Debug|x64
+		{665E788D-08D3-43E3-A448-2F44BBA4752C}.Debug|x64.Build.0 = Debug|x64
+		{665E788D-08D3-43E3-A448-2F44BBA4752C}.Debug|x86.ActiveCfg = Debug|Win32
+		{665E788D-08D3-43E3-A448-2F44BBA4752C}.Debug|x86.Build.0 = Debug|Win32
+		{665E788D-08D3-43E3-A448-2F44BBA4752C}.Release|x64.ActiveCfg = Release|x64
+		{665E788D-08D3-43E3-A448-2F44BBA4752C}.Release|x64.Build.0 = Release|x64
+		{665E788D-08D3-43E3-A448-2F44BBA4752C}.Release|x86.ActiveCfg = Release|Win32
+		{665E788D-08D3-43E3-A448-2F44BBA4752C}.Release|x86.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
