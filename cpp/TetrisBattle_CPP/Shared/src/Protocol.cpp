@@ -1,4 +1,4 @@
-#include "Protocol.h"
+#include "../include/Protocol.h"
 #include <sstream>
 #include <algorithm>
 
