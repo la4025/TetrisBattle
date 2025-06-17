@@ -1,38 +1,16 @@
 #include <iostream>
 #include <string>
 #include <thread>
-#include<WinSock2.h>
+#include <WinSock2.h>
 #pragma comment(lib, "ws2_32.lib")
 
 #include "../../Shared/include/Protocol.h"
 
-void HandleClient(SOCKET clientSocket)
-{
-	char buffer[1024];
-	int bytesReceived = recv(clientSocket, buffer, sizeof(buffer), 0);
-
-	if (bytesReceived <= 0)
-	{
-		return;
-	}
-
-	std::string received(buffer, bytesReceived);
-	std::cout << "[Server] Received : " << received << std::endl;
-
-	auto parsed = Tetris::Message::Deserialize(received);
-
-	if (parsed.has_value())
-	{
-		std::string response = parsed->Serialize();
-		send(clientSocket, response.c_str(), static_cast<int>(response.size()), 0);
-		std::cout << "[Server] Echoed back.\n";
-	}
-
-	closesocket(clientSocket);
-}
+using namespace Tetris;
 
 int main()
 {
+	//WinSock 초기화
 	WSADATA wsaData;
 	WSAStartup(MAKEWORD(2, 2), &wsaData);
 
@@ -47,11 +25,112 @@ int main()
 
 	std::cout << "[Server] Listening on port 5000....\n";
 
+	SOCKET clientSocket = accept(serverSocket, nullptr, nullptr);
+	std::cout << "[Server] Client connected!\n";
+
+	// 게임판 초기화
+	std::vector<std::vector<int>> board(20, std::vector<int>(10, 0));
+	int currentX = 4;
+	int currentY = 0;
+
+	std::string recvBuffer;
+
 	while (true)
 	{
-		SOCKET clientSocket = accept(serverSocket, nullptr, nullptr);
-		std::thread(HandleClient, clientSocket).detach();
+		char buffer[4096];
+		int received = recv(clientSocket, buffer, sizeof(buffer), 0);
+
+		if (received <= 0)
+		{
+			continue;
+		}
+
+		recvBuffer.append(buffer, received);
+		size_t pos;
+		while ((pos = recvBuffer.find('\n')) != std::string::npos)
+		{
+			std::string data = recvBuffer.substr(0, pos);
+			recvBuffer.erase(0, pos + 1);
+
+			try
+			{
+				auto msg = Message::Deserialize(data);
+
+				if (!msg || msg->type != MessageType::GameInput)
+				{
+					continue;
+				}
+
+				auto input = GameInputPayload::Deserialize(msg->payload);
+
+				if (!input)
+				{
+					continue;
+				}
+
+				// 입력 처리
+				switch (input->action)
+				{
+				case InputAction::MoveLeft:
+				{
+					if (currentX > 0)
+					{
+						currentX--;
+						break;
+					}
+				}
+				case InputAction::MoveRight:
+				{
+					if (currentX < 9)
+					{
+						currentX++;
+						break;
+					}
+				}
+				case InputAction::SoftDrop:
+				{
+					if (currentY < 19)
+					{
+						currentY++;
+						break;
+					}
+				}
+				case InputAction::HardDrop:
+				{
+					currentY = 19;
+					break;
+				}
+				default:
+				{
+					break;
+				}
+				}
+			}
+			catch (const std::exception& ex)
+			{
+				std::cerr << "예외발생 : " << ex.what() << std::endl;
+				continue;
+			}
+		}
+
+		// GameState 생성
+		GameStatePayload state;
+		state.board = board;
+		state.currentBlock = BlockInfo{ TetrominoShape::T, currentX, currentY, 0 };
+		state.nextBlock = TetrominoShape::L;
+
+		Message response;
+		response.type = MessageType::GameState;
+		response.payload = state.Serialize();
+
+		std::string toSend = response.Serialize();
+		send(clientSocket, toSend.c_str(), static_cast<int>(toSend.size()), 0);
+		std::cout << "[서버] GameInput 수신, 응답 전송" << std::endl; // 디버깅 로그
 	}
 
+	closesocket(clientSocket);
+	closesocket(serverSocket);
 	WSACleanup();
+
+	return 0;
 }

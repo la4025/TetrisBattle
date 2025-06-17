@@ -4,17 +4,6 @@
 
 namespace Tetris
 {
-	// helper : 문자열 트리밍
-	static std::string TrimQuotes(const std::string& str)
-	{
-		if (str.front() == '"' && str.back() == '"')
-		{
-			return str.substr(1, str.size() - 2);
-		}
-
-		return str;
-	}
-
 	MessageType ParseMessageType(const std::string& typeStr)
 	{
 		if (typeStr == "Login")
@@ -44,6 +33,7 @@ namespace Tetris
 
 		return MessageType::Unknown;
 	}
+
 	std::string ToString(MessageType type)
 	{
 		switch (type)
@@ -79,65 +69,300 @@ namespace Tetris
 		}
 	}
 
+	InputAction ParseInputAction(const std::string& actionStr)
+	{
+		if (actionStr == "MoveLeft")
+		{
+			return InputAction::MoveLeft;
+		}
+		if (actionStr == "MoveRight")
+		{
+			return InputAction::MoveRight;
+		}
+		if (actionStr == "Rotate")
+		{
+			return InputAction::Rotate;
+		}
+		if (actionStr == "SoftDrop")
+		{
+			return InputAction::SoftDrop;
+		}
+		if (actionStr == "HardDrop")
+		{
+			return InputAction::HardDrop;
+		}
+		if (actionStr == "Hold")
+		{
+			return InputAction::Hold;
+		}
+
+		return InputAction::Unknown;
+	}
+
+	std::string ToString(InputAction action)
+	{
+		switch (action)
+		{
+		case InputAction::MoveLeft:
+		{
+			return "MoveLeft";
+		}
+		case InputAction::MoveRight:
+		{
+			return "MoveRight";
+		}
+		case InputAction::Rotate:
+		{
+			return "Rotate";
+		}
+		case InputAction::SoftDrop:
+		{
+			return "SoftDrop";
+		}
+		case InputAction::HardDrop:
+		{
+			return "HardDrop";
+		}
+		case InputAction::Hold:
+		{
+			return "Hold";
+		}
+		default:
+		{
+			return "Unknown";
+		}
+		}
+	}
+
+	TetrominoShape ParseShape(const std::string& actionStr)
+	{
+		if (actionStr == "I")
+		{
+			return TetrominoShape::I;
+		}
+		if (actionStr == "O")
+		{
+			return TetrominoShape::O;
+		}
+		if (actionStr == "T")
+		{
+			return TetrominoShape::T;
+		}
+		if (actionStr == "S")
+		{
+			return TetrominoShape::S;
+		}
+		if (actionStr == "Z")
+		{
+			return TetrominoShape::Z;
+		}
+		if (actionStr == "J")
+		{
+			return TetrominoShape::J;
+		}
+		if (actionStr == "L")
+		{
+			return TetrominoShape::L;
+		}
+
+		return TetrominoShape::None;
+	}
+
+	std::string ToString(TetrominoShape shape)
+	{
+		switch (shape)
+		{
+		case TetrominoShape::I:
+		{
+			return "I";
+		}
+		case TetrominoShape::O:
+		{
+			return "O";
+		}
+		case TetrominoShape::T:
+		{
+			return "T";
+		}
+		case TetrominoShape::S:
+		{
+			return "S";
+		}
+		case TetrominoShape::Z:
+		{
+			return "Z";
+		}
+		case TetrominoShape::J:
+		{
+			return "J";
+		}
+		case TetrominoShape::L:
+		{
+			return "L";
+		}
+		default:
+		{
+			return "None";
+		}
+		}
+	}
+
 	std::string Message::Serialize() const
 	{
-		std::ostringstream oss;
-		oss << "{";
-		oss << "\"type\":\"" << ToString(type) << "\",";
-		oss << "\"payload\":" << payload;
-		oss << "}";
+		json jsonData;
+		jsonData["type"] = ToString(type);
+		// payload는 JSON 문자열 이므로 파싱
+		jsonData["payload"] = json::parse(payload);
 
-		return oss.str();
+		return jsonData.dump();
 	}
 
 	std::optional<Message> Message::Deserialize(const std::string& jsonStr)
 	{
-		Message msg;
+		try
+		{
+			json jsonData = json::parse(jsonStr);
 
-		auto typePos = jsonStr.find("\"type\"");
-
-		if (typePos == std::string::npos)
+			Message msg;
+			msg.type = ParseMessageType(jsonData.at("type").get<std::string>());
+			// payload는 다시 문자열로 저장
+			msg.payload = jsonData.at("payload").dump();
+		}
+		catch (...)
 		{
 			return std::nullopt;
 		}
+	}
 
-		auto typeStart = jsonStr.find(":", typePos);
-		auto typeEnd = jsonStr.find(",", typeStart);
+	std::string GameInputPayload::Serialize() const
+	{
+		json jsonData;
+		jsonData["action"] = ToString(action);
+		jsonData["timestamp"] = timestamp;
 
-		if (typeStart == std::string::npos || typeEnd == std::string::npos)
+		return jsonData.dump();
+	}
+
+	std::optional<GameInputPayload> GameInputPayload::Deserialize(const std::string& jsonStr)
+	{
+		try
+		{
+			json jsonData = json::parse(jsonStr);
+			
+			GameInputPayload payload;
+			payload.action = ParseInputAction(jsonData.at("action").get<std::string>());
+			payload.timestamp = jsonData.at("timestamp").get<uint64_t>();
+
+			return payload;
+		}
+		catch (...)
 		{
 			return std::nullopt;
 		}
+	}
 
-		std::string typeStr = jsonStr.substr(typeStart + 1, typeEnd - typeStart - 1);
-		msg.type = ParseMessageType(TrimQuotes(typeStr));
+	std::string LoginPayload::Serialize() const
+	{
+		json jsonData;
+		jsonData["username"] = username;
+		jsonData["password"] = password;
+		return jsonData.dump();
+	}
 
-		auto payloadPos = jsonStr.find("\"payload\"");
+	std::optional<LoginPayload> LoginPayload::Deserialize(const std::string& jsonStr)
+	{
+		try
+		{
+			json jsonData = json::parse(jsonStr);
+			LoginPayload payload;
+			payload.username = jsonData.at("username").get<std::string>();
+			payload.password = jsonData.at("password").get<std::string>();
 
-		if (payloadPos == std::string::npos)
+			return payload;
+		}
+		// 모든 예외를 처리
+		catch (...)
 		{
 			return std::nullopt;
 		}
+	}
 
-		auto payloadStart = jsonStr.find(":", payloadPos);
+	std::string LoginResultPayload::Serialize() const
+	{
+		json jsonData;
+		jsonData["success"] = success;
+		jsonData["message"] = message;
+		jsonData["userId"] = userId;
 
-		if (payloadStart == std::string::npos)
+		return jsonData.dump();
+	}
+
+	std::optional<LoginResultPayload> LoginResultPayload::Deserialize(const std::string& jsonStr)
+	{
+		try
+		{
+			json jsonData;
+			LoginResultPayload payload;
+			payload.success = jsonData.at("success").get<bool>();
+			payload.message = jsonData.at("message").get<std::string>();
+			payload.userId = jsonData.at("userId").get<int>();
+
+			return payload;
+		}
+		catch (...)
 		{
 			return std::nullopt;
 		}
+	}
 
-		std::string payload = jsonStr.substr(payloadStart + 1);
+	json BlockInfo::ToJson() const
+	{
+		json jsonData;
+		jsonData["shape"] = ToString(shape);
+		jsonData["x"] = x;
+		jsonData["y"] = y;
+		jsonData["rotation"] = rotation;
 
-		if (!payload.empty() && payload.back() == '}')
+		return jsonData;
+	}
+
+	BlockInfo BlockInfo::FromJson(const json& jsonData)
+	{
+		BlockInfo b;
+		b.shape = ParseShape(jsonData.at("shape").get<std::string>());
+		b.x = jsonData.at("x").get<int>();
+		b.y = jsonData.at("y").get<int>();
+		b.rotation = jsonData.at("rotation").get<int>();
+
+		return b;
+	}
+
+	std::string GameStatePayload::Serialize() const
+	{
+		json jsonData;
+		jsonData["board"] = board;
+		jsonData["currentBlock"] = currentBlock.ToJson();
+		jsonData["nextBlock"] = ToString(nextBlock);
+
+		return jsonData;
+	}
+
+	std::optional<GameStatePayload> GameStatePayload::Deserialize(const std::string& jsonStr)
+	{
+		try
 		{
-			// 끝의 } 제거
-			size_t lastBrace = payload.find_last_of('}');
-			payload = payload.substr(0, lastBrace + 1);
+			json jsonData;
+			GameStatePayload payload;
+			payload.board = jsonData.at("board").get<std::vector<std::vector<int>>>();
+			payload.currentBlock = BlockInfo::FromJson(jsonData.at("currentBlock"));
+			payload.nextBlock = ParseShape(jsonData.at("nextBlock").get<std::string>());
+
+			return payload;
 		}
-
-		msg.payload = payload;
-
-		return msg;
+		catch (...)
+		{
+			return std::nullopt;
+		}
 	}
 
 }

@@ -9,6 +9,8 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="src\ClientMain.cpp" />
+    <ClCompile Include="src\ClientMain.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>

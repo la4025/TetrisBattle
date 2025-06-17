@@ -9,9 +9,13 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="include\Protocol.h" />
+    <ClCompile Include="src\Protocol.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="src\Protocol.cpp" />
+    <ClInclude Include="include\Protocol.h">
+      <Filter>include</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>
