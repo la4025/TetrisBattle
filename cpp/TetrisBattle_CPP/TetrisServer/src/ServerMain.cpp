@@ -56,8 +56,15 @@ int main()
 			{
 				auto msg = Message::Deserialize(data);
 
-				if (!msg || msg->type != MessageType::GameInput)
-				{
+				if (!msg) {
+					std::cerr << "Message::Deserialize ½ÇÆÐ\n";
+					continue;
+				}
+
+				std::cout << "type: " << static_cast<int>(msg->type) << std::endl;
+
+				if (msg->type != MessageType::GameInput) {
+					std::cerr << "msg->type != GameInput (" << static_cast<int>(msg->type) << ")\n";
 					continue;
 				}
 

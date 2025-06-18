@@ -227,6 +227,8 @@ namespace Tetris
 			msg.type = ParseMessageType(jsonData.at("type").get<std::string>());
 			// payload는 다시 문자열로 저장
 			msg.payload = jsonData.at("payload").dump();
+
+			return msg;
 		}
 		catch (...)
 		{
@@ -301,7 +303,7 @@ namespace Tetris
 	{
 		try
 		{
-			json jsonData;
+			json jsonData = json::parse(jsonStr);
 			LoginResultPayload payload;
 			payload.success = jsonData.at("success").get<bool>();
 			payload.message = jsonData.at("message").get<std::string>();
@@ -344,14 +346,14 @@ namespace Tetris
 		jsonData["currentBlock"] = currentBlock.ToJson();
 		jsonData["nextBlock"] = ToString(nextBlock);
 
-		return jsonData;
+		return jsonData.dump();
 	}
 
 	std::optional<GameStatePayload> GameStatePayload::Deserialize(const std::string& jsonStr)
 	{
 		try
 		{
-			json jsonData;
+			json jsonData = json::parse(jsonStr);
 			GameStatePayload payload;
 			payload.board = jsonData.at("board").get<std::vector<std::vector<int>>>();
 			payload.currentBlock = BlockInfo::FromJson(jsonData.at("currentBlock"));
