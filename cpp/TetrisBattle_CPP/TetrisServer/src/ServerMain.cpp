@@ -28,96 +28,119 @@ int main()
 	SOCKET clientSocket = accept(serverSocket, nullptr, nullptr);
 	std::cout << "[Server] Client connected!\n";
 
+	u_long mode = 1;
+	ioctlsocket(clientSocket, FIONBIO, &mode);
+
 	// 게임판 초기화
 	std::vector<std::vector<int>> board(20, std::vector<int>(10, 0));
 	int currentX = 4;
 	int currentY = 0;
 
 	std::string recvBuffer;
+	auto lastDropTime = std::chrono::steady_clock::now();
 
 	while (true)
 	{
 		char buffer[4096];
 		int received = recv(clientSocket, buffer, sizeof(buffer), 0);
 
-		if (received <= 0)
+		if (received > 0)
 		{
-			continue;
+			recvBuffer.append(buffer, received);
+			size_t pos;
+			while ((pos = recvBuffer.find('\n')) != std::string::npos)
+			{
+				std::string data = recvBuffer.substr(0, pos);
+				recvBuffer.erase(0, pos + 1);
+
+				try
+				{
+					auto msg = Message::Deserialize(data);
+
+					if (!msg) {
+						std::cerr << "Message::Deserialize 실패\n";
+						continue;
+					}
+
+					std::cout << "type: " << static_cast<int>(msg->type) << std::endl;
+
+					if (msg->type != MessageType::GameInput) {
+						std::cerr << "msg->type != GameInput (" << static_cast<int>(msg->type) << ")\n";
+						continue;
+					}
+
+					auto input = GameInputPayload::Deserialize(msg->payload);
+
+					if (!input)
+					{
+						continue;
+					}
+
+					// 입력 처리
+					switch (input->action)
+					{
+					case InputAction::MoveLeft:
+					{
+						if (currentX > 0)
+						{
+							currentX--;
+							break;
+						}
+					}
+					case InputAction::MoveRight:
+					{
+						if (currentX < 9)
+						{
+							currentX++;
+							break;
+						}
+					}
+					case InputAction::SoftDrop:
+					{
+						if (currentY < 19)
+						{
+							currentY++;
+							break;
+						}
+					}
+					case InputAction::HardDrop:
+					{
+						currentY = 19;
+						break;
+					}
+					default:
+					{
+						break;
+					}
+					}
+				}
+				catch (const std::exception& ex)
+				{
+					std::cerr << "예외발생 : " << ex.what() << std::endl;
+					continue;
+				}
+			}
+		}
+		else if (received == SOCKET_ERROR)
+		{
+			if (WSAGetLastError() != WSAEWOULDBLOCK)
+			{
+				std::cerr << "recv error\n";
+				break;
+			}
 		}
 
-		recvBuffer.append(buffer, received);
-		size_t pos;
-		while ((pos = recvBuffer.find('\n')) != std::string::npos)
+		// 블록 낙하 처리 (0.5 초마다)
+		auto now = std::chrono::steady_clock::now();
+		auto elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(now - lastDropTime);
+
+		if (elapsed.count() >= 500)
 		{
-			std::string data = recvBuffer.substr(0, pos);
-			recvBuffer.erase(0, pos + 1);
-
-			try
+			if (currentY < 19)
 			{
-				auto msg = Message::Deserialize(data);
-
-				if (!msg) {
-					std::cerr << "Message::Deserialize 실패\n";
-					continue;
-				}
-
-				std::cout << "type: " << static_cast<int>(msg->type) << std::endl;
-
-				if (msg->type != MessageType::GameInput) {
-					std::cerr << "msg->type != GameInput (" << static_cast<int>(msg->type) << ")\n";
-					continue;
-				}
-
-				auto input = GameInputPayload::Deserialize(msg->payload);
-
-				if (!input)
-				{
-					continue;
-				}
-
-				// 입력 처리
-				switch (input->action)
-				{
-				case InputAction::MoveLeft:
-				{
-					if (currentX > 0)
-					{
-						currentX--;
-						break;
-					}
-				}
-				case InputAction::MoveRight:
-				{
-					if (currentX < 9)
-					{
-						currentX++;
-						break;
-					}
-				}
-				case InputAction::SoftDrop:
-				{
-					if (currentY < 19)
-					{
-						currentY++;
-						break;
-					}
-				}
-				case InputAction::HardDrop:
-				{
-					currentY = 19;
-					break;
-				}
-				default:
-				{
-					break;
-				}
-				}
+				currentY++;
 			}
-			catch (const std::exception& ex)
-			{
-				std::cerr << "예외발생 : " << ex.what() << std::endl;
-				continue;
-			}
+			lastDropTime = now;
 		}
 
 		// GameState 생성
@@ -133,6 +156,8 @@ int main()
 		std::string toSend = response.Serialize();
 		send(clientSocket, toSend.c_str(), static_cast<int>(toSend.size()), 0);
 		std::cout << "[서버] GameInput 수신, 응답 전송" << std::endl; // 디버깅 로그
+
+		std::this_thread::sleep_for(std::chrono::milliseconds(50)); // 20fps
 	}
 
 	closesocket(clientSocket);

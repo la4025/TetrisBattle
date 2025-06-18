@@ -68,6 +68,11 @@ int main()
 		return 1;
 	}
 
+	// 응답 대기 (non-blocking 방식 간단 구현)
+	u_long mode = 1;
+	// non-blocking 모드
+	ioctlsocket(sock, FIONBIO, &mode);
+
 	std::cout << "서버에 연결됨. 조작키 : A/D/W/S/SPACE\n";
 
 	while (true)
@@ -96,23 +101,20 @@ int main()
 			send(sock, toSend.c_str(), static_cast<int>(toSend.size()), 0);
 		}
 
-		// 응답 대기 (non-blocking 방식 간단 구현)
-		u_long mode = 1;
-		// non-blocking 모드
-		ioctlsocket(sock, FIONBIO, &mode);
+		
 		char buffer[4096] = {};
 		int received = recv(sock, buffer, sizeof(buffer), 0);
 
 		if (received > 0)
 		{
 			std::string response(buffer, received);
-			std::cout << "[클라이언트 수신] " << response << std::endl; // 디버깅 로그
+			//std::cout << "[클라이언트 수신] " << response << std::endl; // 디버깅 로그
 
 			auto parsed = Message::Deserialize(response);
 
 			if (parsed) // 디버깅 로그
 			{
-				std::cout << "메시지 타입: " << static_cast<int>(parsed->type) << std::endl; // 디버깅 로그
+				//std::cout << "메시지 타입: " << static_cast<int>(parsed->type) << std::endl; // 디버깅 로그
 
 
 				if (parsed && parsed->type == MessageType::GameState)
@@ -121,12 +123,12 @@ int main()
 
 					if (state) 
 					{
-						std::cout << "GameStatePayload 파싱 성공\n"; // 디버깅 로그
+						//std::cout << "GameStatePayload 파싱 성공\n"; // 디버깅 로그
 						RenderGameState(*state);
 					}
 					else 
 					{
-						std::cerr << "GameStatePayload 파싱 실패\n"; // 디버깅 로그
+						//std::cerr << "GameStatePayload 파싱 실패\n"; // 디버깅 로그
 					}
 				}
 			}
