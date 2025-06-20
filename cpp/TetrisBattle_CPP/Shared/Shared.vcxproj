@@ -20,9 +20,11 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="include\Protocol.h" />
+    <ClInclude Include="include\TetrisLogic.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\Protocol.cpp" />
+    <ClCompile Include="src\TetrisLogic.cpp" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>17.0</VCProjectVersion>

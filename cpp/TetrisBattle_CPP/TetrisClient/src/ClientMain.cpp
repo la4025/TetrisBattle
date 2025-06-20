@@ -7,6 +7,7 @@
 #pragma comment(lib,"ws2_32.lib")
 #include <vector>
 #include "../../Shared/include/Protocol.h"
+#include "../../Shared/include/TetrisLogic.h"
 
 using namespace Tetris;
 
@@ -150,6 +151,9 @@ void RenderGameState(const GameStatePayload& state)
 	const int height = state.board.size();
 	const int width = state.board[0].size();
 
+	// 회전 적용된 블록 셀 좌표 계산
+	auto blockCells = GetBlockCells(state.currentBlock);
+
 	// 클리어 화면
 #ifdef _WIN32
 	system("cls");
@@ -158,19 +162,22 @@ void RenderGameState(const GameStatePayload& state)
 #endif
 
 	// 게임판 출력
-	for (int y = 0; y < height; ++y) {
-		for (int x = 0; x < width; ++x) {
-			bool isCurrentBlock = false;
+	for (int y = 0; y < height; ++y) 
+	{
+		for (int x = 0; x < width; ++x) 
+		{
+			bool isBlock = std::any_of(blockCells.begin(), blockCells.end(),
+				[&](const std::pair<int, int>& cell)
+				{
+					return cell.first == x && cell.second == y;
+				});
 
-			// 현재 블록 위치에 있는지 검사
-			if (x == state.currentBlock.x && y == state.currentBlock.y) {
-				isCurrentBlock = true;
-			}
-
-			if (isCurrentBlock) {
+			if (isBlock)
+			{
 				std::cout << "□";
 			}
-			else {
+			else 
+			{
 				std::cout << (state.board[y][x] ? "■" : " ");
 			}
 		}

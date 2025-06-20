@@ -12,9 +12,15 @@
     <ClCompile Include="src\Protocol.cpp">
       <Filter>src</Filter>
     </ClCompile>
+    <ClCompile Include="src\TetrisLogic.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="include\Protocol.h">
+      <Filter>include</Filter>
+    </ClInclude>
+    <ClInclude Include="include\TetrisLogic.h">
       <Filter>include</Filter>
     </ClInclude>
   </ItemGroup>
